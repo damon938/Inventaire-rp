@@ -4,179 +4,125 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventaire RPG</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg1:#081224;
-  --bg2:#0d2a4a;
-  --card:rgba(255,255,255,0.03);
-  --accent:#00b4d8;
-  --muted:#cfe8ff;
+body {
+  background: linear-gradient(135deg, #0d1b2a, #1b263b);
+  font-family: 'Poppins', sans-serif;
+  color: #e0e0e0;
+  margin: 0;
+  padding: 20px;
 }
-body{
-  margin:0;
-  font-family:'Poppins', sans-serif;
-  background:linear-gradient(180deg,var(--bg1),var(--bg2));
-  color:#eaf6ff;
-  padding:32px;
-  display:flex;
-  justify-content:center;
+
+h1 { color: #00b4d8; text-align:center; }
+
+input, button {
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  margin: 5px;
 }
-.wrap{width:100%;max-width:1000px;}
-header{
-  display:flex;
-  align-items:center;
-  gap:18px;
-  margin-bottom:18px;
+
+button { background:#0077b6; color:#fff; cursor:pointer; }
+button:hover { background:#00b4d8; }
+
+.items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
 }
-h1{
-  margin:0;
-  font-family:'Cinzel Decorative', serif;
-  color:var(--accent);
-  font-size:28px;
-  text-shadow:0 4px 18px rgba(0,180,216,0.08);
+
+.item-card {
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+  padding: 12px;
+  width: 200px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
-.controls{
-  margin-left:auto;
-  display:flex;
-  gap:10px;
-  align-items:center;
+
+.tag {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: bold;
+  display: inline-block;
+  margin-top: 6px;
 }
-input[type="text"]{
-  padding:10px 12px;
-  border-radius:10px;
-  border:2px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.02);
-  color:var(--muted);
-  min-width:200px;
-}
-button{
-  background:var(--accent);
-  color:#042433;
-  border:none;
-  padding:10px 14px;
-  border-radius:10px;
-  cursor:pointer;
-  font-weight:600;
-}
-button:hover{filter:brightness(1.05);}
-.grid{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:20px;
-}
-.items{
-  display:grid;
-  grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
-  gap:12px;
-}
-.item-card{
-  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  border-radius:10px;
-  padding:12px;
-  border:1px solid rgba(255,255,255,0.03);
-  box-shadow:0 6px 18px rgba(2,8,23,0.5);
-  cursor:pointer;
-  transition: transform 0.15s;
-}
-.item-card:hover{transform:translateY(-2px);}
-.toprow{display:flex;justify-content:space-between;align-items:center;}
-.iname{font-weight:700;color:#fff;font-size:16px;}
-.qty{font-size:13px;color:#cfe8ff;opacity:0.9;}
-.type{font-size:12px;color:#9ecbf3;margin-top:6px;}
-.effect{margin-top:6px;font-size:13px;color:#eaf6ff;font-weight:600;}
-.tag{
-  padding:4px 8px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:700;
-  color:#0b1720;
-}
-.common{background:#cbd5df;}
-.uncommon{background:#7ad29e;color:#052215;}
+
+.common{background:#cbd5df;color:#042433;}
+.uncommon{background:#7ad29e;color:#042215;}
 .rare{background:#7fb4ff;color:#042033;}
 .epic{background:#bf9bff;color:#2a083a;}
 .legendary{background:#ffd36b;color:#42310a;}
-.empty{text-align:center;color:#a8d8ff;padding:30px 6px;}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>Inventaire — Eryndor</h1>
-    <div class="controls">
-      <input id="playerId" placeholder="Entrez ID (ex: ARK001)" />
-      <button id="btnSearch">Afficher</button>
-    </div>
-  </header>
 
-  <div class="items" id="items">
-    <div class="empty">Entrez un ID pour afficher l'inventaire</div>
-  </div>
-</div>
+<h1>Inventaire du Joueur</h1>
+<input id="playerId" placeholder="Entrez ID ex: ARK001">
+<button id="btnSearch">Afficher</button>
+
+<div class="items" id="items"></div>
 
 <script>
 const API = 'https://sheetdb.io/api/v1/gyzos0qguzqsv';
 
-// couleur selon rareté
 function rarityClass(r){
   if(!r) return 'common';
   const rr = String(r).toLowerCase();
-  if(rr.includes('leg') || rr.includes('lég') || rr.includes('legend')) return 'legendary';
+  if(rr.includes('leg')) return 'legendary';
   if(rr.includes('épi') || rr.includes('epic')) return 'epic';
   if(rr.includes('ra') || rr.includes('rare')) return 'rare';
-  if(rr.includes('peu') || rr.includes('uncommon') || rr.includes('uncom')) return 'uncommon';
+  if(rr.includes('unco') || rr.includes('peu')) return 'uncommon';
   return 'common';
-}
-
-// échapper le texte
-function escapeHtml(text){
-  return text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
 async function loadInventory(){
   const id = document.getElementById('playerId').value.trim();
   const itemsEl = document.getElementById('items');
   itemsEl.innerHTML = '';
-  if(!id){ itemsEl.innerHTML='<div class="empty">Veuillez entrer un ID</div>'; return; }
+
+  if(!id){ itemsEl.innerHTML='<p>Veuillez entrer un ID.</p>'; return; }
 
   try{
     const res = await fetch(`${API}/search?id=${encodeURIComponent(id)}`);
-    let rows = await res.json();
+    const rows = await res.json();
+
     if(!rows || rows.length===0){
-      itemsEl.innerHTML='<div class="empty">Aucun objet trouvé pour cet ID</div>';
+      itemsEl.innerHTML='<p>Aucun objet trouvé pour cet ID.</p>';
       return;
     }
 
     rows.forEach(r=>{
       const item = {
-        name: r["nom d'objet"]||r["nom"]||'Objet sans nom',
-        type: r["type d'objet"]||'—',
-        rarity: r["rareté"]||'Commun',
-        qty: r["quantité"]||'1',
-        value: r["valeur en lunaris"]||'0'
+        nom: r["nom de l'objet "] || 'Objet sans nom',
+        type: r["type d'objet "] || '—',
+        rarete: r["rareté "] || 'Commun',
+        quantite: r["quantité "] || '1',
+        valeur: r["valeur lunaris "] || '0'
       };
-      const card = document.createElement('div');
-      card.className='item-card';
-      card.innerHTML=`
-        <div class="toprow">
-          <div class="iname">${escapeHtml(item.name)}</div>
-          <div class="qty">${item.qty}</div>
-        </div>
-        <div class="type">${escapeHtml(item.type)}</div>
-        <div style="margin-top:6px"><span class="tag ${rarityClass(item.rarity)}">${item.rarity}</span></div>
-        <div class="effect">${escapeHtml(item.value)} Lunaris</div>
+
+      const div = document.createElement('div');
+      div.className='item-card';
+      div.innerHTML = `
+        <strong>${item.nom}</strong><br>
+        Type: ${item.type}<br>
+        Quantité: ${item.quantite}<br>
+        Valeur: ${item.valeur} Lunaris<br>
+        <span class="tag ${rarityClass(item.rarete)}">${item.rarete}</span>
       `;
-      itemsEl.appendChild(card);
+      itemsEl.appendChild(div);
     });
+
   }catch(err){
     console.error(err);
-    itemsEl.innerHTML='<div class="empty">Erreur lors de la récupération des données.</div>';
+    itemsEl.innerHTML='<p>Erreur lors de la récupération des données.</p>';
   }
 }
 
 document.getElementById('btnSearch').addEventListener('click', loadInventory);
 document.getElementById('playerId').addEventListener('keydown', e=>{ if(e.key==='Enter') loadInventory(); });
 </script>
+
 </body>
-  </html>
+</html>
