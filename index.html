@@ -212,43 +212,4 @@ async function loadInventory(){
     }
 
     itemsEl.innerHTML = '';
-    rows.forEach(r=>{
-      const item = {
-        name: r['nom d\'objet'] || r['nom'] || 'Objet sans nom',
-        type: r["type d'objet"] || '—',
-        rarity: r['rareté'] || 'Commun',
-        qty: r['quantité'] || '1',
-        value: r['valeur en lunaris'] || '0'
-      };
-      const tagClass = rarityClass(item.rarity);
-      const card = document.createElement('div');
-      card.className = 'item-card';
-      card.innerHTML = `
-        <div class="toprow">
-          <div class="iname">${escapeHtml(item.name)}</div>
-          <div class="qty">${item.qty}</div>
-        </div>
-        <div class="type">${escapeHtml(item.type)}</div>
-        <div style="margin-top:8px"><span class="tag ${tagClass}">${item.rarity}</span></div>
-        <div class="effect">${escapeHtml(item.value)} Lunaris</div>
-      `;
-      card.addEventListener('click', ()=> showInfo(item));
-      itemsEl.appendChild(card);
-    });
-
-    info.textContent = `${rows.length} objet(s) trouvé(s) pour ${id}. Cliquez sur un objet pour voir les détails.`;
-    document.getElementById('rawJson').href = `${API}/search?id=${encodeURIComponent(id)}`;
-  }catch(err){
-    console.error(err);
-    itemsEl.innerHTML = `<div style="grid-column:1/-1;color:#ffb3b3;padding:20px">Erreur lors de la récupération des données.</div>`;
-    info.textContent = 'Erreur';
-  }
-}
-
-function showInfo(item){
-  const info = document.getElementById('info');
-  info.innerHTML = `
-    <strong style="color:var(--accent);font-weight:700">${escapeHtml(item.name)}</strong>
-    <div style="margin-top:8px;color:#cfe8ff">Type : ${escapeHtml(item.type)}</div>
-    <div style="margin-top:6px;color:#cfe8ff">Rareté : ${escapeHtml(item.rarity)}</div>
-    <div style="margin-top:6px;color:#
+    rows
