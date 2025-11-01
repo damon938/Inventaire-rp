@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventaire RPG</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Poppins:wght@400;600&display=swap');
+
 body {
   background: linear-gradient(135deg, #0d1b2a, #1b263b);
   font-family: 'Poppins', sans-serif;
@@ -14,6 +16,7 @@ body {
 }
 
 h1 { color: #00b4d8; text-align:center; }
+h2 { color: #90e0ef; text-align:center; margin-top:10px; }
 
 input, button {
   padding: 10px;
@@ -27,26 +30,29 @@ button:hover { background:#00b4d8; }
 
 .items {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 12px;
   margin-top: 20px;
 }
 
 .item-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr auto;
   background: rgba(255,255,255,0.05);
   border-radius: 10px;
-  padding: 12px;
-  width: 200px;
+  padding: 10px;
+  align-items: center;
   box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
+
+.item-card div { padding: 4px 6px; overflow-wrap: break-word; }
 
 .tag {
   padding: 4px 8px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: bold;
-  display: inline-block;
-  margin-top: 6px;
+  text-align:center;
 }
 
 .common{background:#cbd5df;color:#042433;}
@@ -58,22 +64,24 @@ button:hover { background:#00b4d8; }
 </head>
 <body>
 
-<h1>Inventaire du Joueur</h1>
+<h1>Inventaire RPG</h1>
 <input id="playerId" placeholder="Entrez ID ex: ARK001">
 <button id="btnSearch">Afficher</button>
+<h2 id="playerName"></h2>
 
 <div class="items" id="items"></div>
 
 <script>
 const API = 'https://sheetdb.io/api/v1/gyzos0qguzqsv';
 
+// Convertit la rareté en classe CSS
 function rarityClass(r){
   if(!r) return 'common';
   const rr = String(r).toLowerCase();
-  if(rr.includes('leg')) return 'legendary';
+  if(rr.includes('lég') || rr.includes('leg')) return 'legendary';
   if(rr.includes('épi') || rr.includes('epic')) return 'epic';
   if(rr.includes('ra') || rr.includes('rare')) return 'rare';
-  if(rr.includes('unco') || rr.includes('peu')) return 'uncommon';
+  if(rr.includes('peu') || rr.includes('unco')) return 'uncommon';
   return 'common';
 }
 
@@ -93,6 +101,9 @@ async function loadInventory(){
       return;
     }
 
+    const joueurNom = rows[0]["Nom"] || "Inconnu";
+    document.getElementById("playerName").textContent = `Inventaire de ${joueurNom}`;
+
     rows.forEach(r=>{
       const item = {
         nom: r["nom de l'objet "] || 'Objet sans nom',
@@ -105,11 +116,11 @@ async function loadInventory(){
       const div = document.createElement('div');
       div.className='item-card';
       div.innerHTML = `
-        <strong>${item.nom}</strong><br>
-        Type: ${item.type}<br>
-        Quantité: ${item.quantite}<br>
-        Valeur: ${item.valeur} Lunaris<br>
-        <span class="tag ${rarityClass(item.rarete)}">${item.rarete}</span>
+        <div><strong>${item.nom}</strong></div>
+        <div>${item.type}</div>
+        <div>${item.quantite}</div>
+        <div>${item.valeur} Lunaris</div>
+        <div><span class="tag ${rarityClass(item.rarete)}">${item.rarete}</span></div>
       `;
       itemsEl.appendChild(div);
     });
@@ -125,4 +136,4 @@ document.getElementById('playerId').addEventListener('keydown', e=>{ if(e.key===
 </script>
 
 </body>
-</html>
+                                 </html>
