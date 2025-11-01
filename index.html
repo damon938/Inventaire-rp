@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Inventaire - RPG</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1: #081224;
+    --bg2: #0d2a4a;
+    --card: rgba(255,255,255,0.03);
+    --accent: #00b4d8;
+    --muted: #cfe8ff;
+  }
+  body{
+    margin:0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(180deg,var(--bg1),var(--bg2));
+    color: #eaf6ff;
+    padding:32px;
+    display:flex;
+    justify-content:center;
+  }
+  .wrap{
+    width:100%;
+    max-width:1000px;
+  }
+  header{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    margin-bottom:18px;
+  }
+  h1{
+    margin:0;
+    font-family:'Cinzel Decorative', serif;
+    color:var(--accent);
+    font-size:28px;
+    text-shadow:0 4px 18px rgba(0,180,216,0.08);
+  }
+  .controls{
+    margin-left:auto;
+    display:flex;
+    gap:10px;
+    align-items:center;
+  }
+  input[type="text"]{
+    padding:10px 12px;
+    border-radius:10px;
+    border:2px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.02);
+    color:var(--muted);
+    min-width:200px;
+  }
+  button{
+    background:var(--accent);
+    color:#042433;
+    border:none;
+    padding:10px 14px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:600;
+  }
+  button:hover{ filter:brightness(1.05) }
+
+  .grid{
+    margin-top:22px;
+    display:grid;
+    grid-template-columns: 1fr 340px;
+    gap:20px;
+  }
+
+  .list {
+    background: var(--card);
+    border-radius:14px;
+    padding:18px;
+    border:1px solid rgba(255,255,255,0.03);
+    min-height:200px;
+  }
+  .list h2 { margin:0 0 10px 0; color: #dcedff; font-size:18px; }
+  .items {
+    display:grid;
+    grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+    gap:12px;
+  }
+
+  .item-card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:10px;
+    padding:10px;
+    border:1px solid rgba(255,255,255,0.03);
+    box-shadow: 0 6px 18px rgba(2,8,23,0.5);
+    cursor:pointer;
+    transition: transform 0.15s;
+  }
+  .item-card:hover{ transform: translateY(-2px); }
+  .toprow{ display:flex; justify-content:space-between; gap:8px; align-items:center; }
+  .iname{ font-weight:700; color:#fff; font-size:15px; }
+  .qty{ font-size:13px; color:#cfe8ff; opacity:0.9; }
+  .type{ font-size:12px; color:#9ecbf3; margin-top:6px; }
+  .effect{ margin-top:6px; font-size:13px; color:#eaf6ff; font-weight:600; }
+
+  /* rarity tags */
+  .tag{
+    padding:4px 8px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+    color:#0b1720;
+  }
+  .common{ background:#cbd5df; }
+  .uncommon{ background:#7ad29e; color:#052215; }
+  .rare{ background:#7fb4ff; color:#042033; }
+  .epic{ background:#bf9bff; color:#2a083a; }
+  .legendary{ background:#ffd36b; color:#42310a; }
+
+  .panel{
+    background: var(--card);
+    border-radius:14px;
+    padding:18px;
+    border:1px solid rgba(255,255,255,0.03);
+  }
+  .panel h3{ margin:0 0 12px 0; color:#dcedff; }
+  .empty{ text-align:center; color:#a8d8ff; padding:30px 6px; }
+
+  .download{
+    margin-top:12px;
+    display:flex; gap:8px;
+  }
+  .download a{
+    text-decoration:none;
+    background: rgba(255,255,255,0.04);
+    padding:8px 10px;
+    border-radius:10px;
+    color:var(--muted);
+    border:1px solid rgba(255,255,255,0.03);
+    font-weight:600;
+  }
+
+  @media (max-width:900px){
+    .grid { grid-template-columns: 1fr; }
+    .controls{ flex-direction:column; align-items:flex-end; gap:8px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Inventaire — Eryndor</h1>
+    <div class="controls">
+      <input id="playerId" placeholder="Entrez ID (ex: ARK001)" />
+      <button id="btnSearch">Afficher</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="list">
+      <h2>Objets</h2>
+      <div id="items" class="items"></div>
+    </div>
+
+    <aside class="panel">
+      <h3>Détails / Actions</h3>
+      <div id="info" class="empty">Aucun objet sélectionné</div>
+      <div class="download">
+        <a id="openSheet" href="https://sheetdb.io/api/v1/gyzos0qguzqsv" target="_blank">Ouvrir SheetDB</a>
+        <a id="rawJson" href="#" target="_blank">Voir JSON</a>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+const API = 'https://sheetdb.io/api/v1/gyzos0qguzqsv';
+
+function rarityClass(r){
+  if(!r) return 'common';
+  const rr = String(r).toLowerCase();
+  if(rr.includes('leg') || rr.includes('lég') || rr.includes('legend')) return 'legendary';
+  if(rr.includes('épi') || rr.includes('epic')) return 'epic';
+  if(rr.includes('ra') || rr.includes('rare')) return 'rare';
+  if(rr.includes('peu') || rr.includes('uncommon') || rr.includes('uncom')) return 'uncommon';
+  return 'common';
+}
+
+document.getElementById('btnSearch').addEventListener('click', loadInventory);
+document.getElementById('playerId').addEventListener('keydown', e=>{ if(e.key==='Enter') loadInventory(); });
+
+async function loadInventory(){
+  const id = document.getElementById('playerId').value.trim();
+  const itemsEl = document.getElementById('items');
+  const info = document.getElementById('info');
+  itemsEl.innerHTML = ''; info.textContent = 'Recherche en cours...';
+  if(!id){ alert('Entre un ID'); info.textContent='Aucun ID fourni'; return; }
+
+  try{
+    const res = await fetch(`${API}/search?id=${encodeURIComponent(id)}`);
+    if(!res.ok) throw new Error('Erreur réseau');
+    let rows = await res.json();
+
+    if(!rows || rows.length === 0){
+      const allRes = await fetch(API);
+      const all = await allRes.json();
+      rows = all.filter(r => (r.id||'').toLowerCase() === id.toLowerCase());
+    }
+
+    if(!rows || rows.length===0){
+      itemsEl.innerHTML = '<div style="grid-column:1/-1;color:#cfe8ff;padding:20px">Aucun objet trouvé pour cet ID.</div>';
+      info.textContent = 'Aucun objet sélectionné';
+      return;
+    }
+
+    itemsEl.innerHTML = '';
+    rows.forEach(r=>{
+      const item = {
+        name: r['nom d\'objet'] || r['nom'] || 'Objet sans nom',
+        type: r["type d'objet"] || '—',
+        rarity: r['rareté'] || 'Commun',
+        qty: r['quantité'] || '1',
+        value: r['valeur en lunaris'] || '0'
+      };
+      const tagClass = rarityClass(item.rarity);
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      card.innerHTML = `
+        <div class="toprow">
+          <div class="iname">${escapeHtml(item.name)}</div>
+          <div class="qty">${item.qty}</div>
+        </div>
+        <div class="type">${escapeHtml(item.type)}</div>
+        <div style="margin-top:8px"><span class="tag ${tagClass}">${item.rarity}</span></div>
+        <div class="effect">${escapeHtml(item.value)} Lunaris</div>
+      `;
+      card.addEventListener('click', ()=> showInfo(item));
+      itemsEl.appendChild(card);
+    });
+
+    info.textContent = `${rows.length} objet(s) trouvé(s) pour ${id}. Cliquez sur un objet pour voir les détails.`;
+    document.getElementById('rawJson').href = `${API}/search?id=${encodeURIComponent(id)}`;
+  }catch(err){
+    console.error(err);
+    itemsEl.innerHTML = `<div style="grid-column:1/-1;color:#ffb3b3;padding:20px">Erreur lors de la récupération des données.</div>`;
+    info.textContent = 'Erreur';
+  }
+}
+
+function showInfo(item){
+  const info = document.getElementById('info');
+  info.innerHTML = `
+    <strong style="color:var(--accent);font-weight:700">${escapeHtml(item.name)}</strong>
+    <div style="margin-top:8px;color:#cfe8ff">Type : ${escapeHtml(item.type)}</div>
+    <div style="margin-top:6px;color:#cfe8ff">Rareté : ${escapeHtml(item.rarity)}</div>
+    <div style="margin-top:6px;color:#
